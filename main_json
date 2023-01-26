@@ -1,0 +1,149 @@
+import requests
+import json
+import time
+import datetime
+from datetime import date
+from datetime import datetime
+from time import gmtime, strftime
+import time
+from time import sleep
+import holidays
+
+nyse_holidays = holidays.NYSE()
+cal_day=[int(strftime("%Y", gmtime())), int(strftime("%m", gmtime())), int(strftime("%d", gmtime()))]
+                     #CHECK IF THIS DAY IS A HOLIDAY
+def check_holidays(year, month, day):
+    nyse_holidays_result=[]
+    check_nyse_holidays=date(year, month, day) in nyse_holidays
+    if check_nyse_holidays==True:
+        print('TODAY NYSE HOLIDAY, STOCK DOESNT WORK ')
+        return check_nyse_holidays
+    else:
+        return check_nyse_holidays
+
+nyse_holidays_result=check_holidays(cal_day[0], cal_day[1], cal_day[2])
+#print(nyse_holidays_result)
+
+day_today=strftime(f"%A", gmtime())
+                      #CHECK IF THIS DAY IS A DAY OFF 
+def check_weekday(day_today):
+    if day_today=='Sunday':
+        print('TODAY NYSE DAY OFF, STOCK DOESNT WORK ')
+        return False
+    if day_today=='Saturday':
+        print('TODAY NYSE DAY OFF, STOCK DOESNT WORK ')
+        return False
+    else:
+        return True
+
+result_check_weekday= check_weekday (day_today)
+#print(result_check_weekday)
+                       # CHECK WHAT TIME IT IS NOW AND CHECK WITH REPORT DATA
+                     
+time_now1=strftime(f"%I:%M", gmtime())
+
+def time_get(nyse_holidays_result, result_check_weekday):
+
+    am_pm=strftime("%p", gmtime())
+    #print(pm)
+    if nyse_holidays_result==False:
+        if result_check_weekday==True:
+            if am_pm=='PM':
+                stock_trade_time='02:58'
+                while True:
+                    time_now=strftime(f"%I:%M", gmtime())
+                    if stock_trade_time==time_now:
+                        return True
+                    print (f"{time_now}")
+                    sleep(60)
+            else:
+                print("Report already issued and traded, data:")
+                return True
+
+result_time= time_get(nyse_holidays_result, result_check_weekday)
+                         # CHECK WHAT TIME IT IS NOW AND CHECK WITH REPORT DATA
+
+def second_check(result_time):
+    if result_time==True:
+        while True:
+            date_report = requests.get('https://www.eia.gov/dashboard/new-england-energy-api/last_updated/dashboard').json()
+            date_report1=date_report['dashboard']['lastUpdated']
+            date_report2=date_report1.split()
+            date_today=strftime("%Y-%m-%d", gmtime())
+            if date_report2 [0] != date_today:
+                print('...........pending')
+                continue
+            else:
+                return True
+            sleep(10)
+
+final_result= second_check(result_time)
+#print (final_result)
+                                       #SCRAPING DATA FROM WEB
+
+def new_england_dashboard(result):
+                                            # NEW ENGLAND NATURAL GAS DEMAND DAILY
+    date_report = requests.get('https://www.eia.gov/dashboard/new-england-energy-api/archives/latest').json()
+    heating_oil_data=requests.get('https://www.eia.gov/dashboard/new-england-energy-api/petroleum/ny-heating-oil-price').json()
+    #print(heating_oil_data)
+    print(f"\n       DAILY NG DEMAND PETRO STOCKS NEW ENGLAND: 17:00, date {date_report['date']}")
+    demand_gas_today= requests.get('https://www.eia.gov/dashboard/new-england-energy-api/gas/total-daily-consumption?range=2week').json()
+    final_demand_gas_today=round((demand_gas_today['current']['data'][-1][1]-demand_gas_today['current']['data'][-2][1]),2)
+    def demand_gas_result_today(final_demand_gas_today):
+        if final_demand_gas_today>0:
+            print (f"Daily demand NG UP {round(final_demand_gas_today,2)} Bcf, UNG UP {round(((final_demand_gas_today*(18/10))),2)}%")
+        if final_demand_gas_today<0:
+            print(f"Daily demand NG DOWN {round(final_demand_gas_today,2)} Bcf, KOLD DOWN {round(((final_demand_gas_today*(18/10))),2)}%")
+    demand_gas_result_today(final_demand_gas_today)
+                                     #NEW ENGLAND PETROLEUM DISTILLATE STOCK CHANGE DAILY
+    destilate_stocks_today=requests.get('https://www.eia.gov/dashboard/new-england-energy-api/petroleum/weekly-distillate-oil-stocks').json()
+    try:
+        final_destilate_stocks =round((destilate_stocks_today['current']['data'][0][1]-destilate_stocks_today['current']['data'][1][1]),2)
+    except TypeError:
+        final_destilate_stocks =round((destilate_stocks_today['current']['data'][0][1]))
+    def destilate_stocks_today_func(final_destilate_stocks_today):
+        if final_destilate_stocks_today<0:
+            print(f"Distillate stock DOWN {round(final_destilate_stocks_today,2)} mill barrels, UCO UP {round((((final_destilate_stocks_today*100)/(333/1000))/-220),2)}%")
+        if final_destilate_stocks_today>0:
+            print(f"Distillate stock UP {round(final_destilate_stocks_today,2)} mill barrels, UCO DOWN {round((((final_destilate_stocks_today*100)/(333/1000))/-220),2)}%")
+    destilate_stocks_today_func(final_destilate_stocks)
+                                         #NEW ENGLAND HEATING OIL PRICE CHANGE DAILY
+
+    def heating_oil_price_change (heating_oil_price1, heating_oil_price2, heating_oil_price3, heating_oil_price4):
+        today_heating_oil_price=[]
+        def none_price(heating_oil_price):
+            if heating_oil_price==None:
+                pass
+            else:
+                today_heating_oil_price.append(heating_oil_price)
+        none_price(heating_oil_price1),none_price(heating_oil_price2), none_price(heating_oil_price3),none_price(heating_oil_price4)
+        result_price_heating_oil= round((((today_heating_oil_price[0]*100)/today_heating_oil_price[1])-100),2)
+        def heating_price_result(result_heating_oil):
+            try:
+                if result_heating_oil>0:
+                    print(f"Heating oil UP {round((result_heating_oil),2)}%, UCO DOWN {round((result_heating_oil),2)}%")
+                if result_heating_oil<0:
+                    print(f"Heating oil DOWN {round((result_heating_oil),2)}%, UCO UP {round((result_heating_oil -(-3/10)),2)}%")
+            except IndexError:
+                print(f"List index out of range, NEED CHECK")
+                pass
+        heating_price_result(result_price_heating_oil)
+    heating_oil_price_change(heating_oil_data['current']['data'][-1][1], heating_oil_data['current']['data'][-2][1], heating_oil_data['current']['data'][-3][1], heating_oil_data['current']['data'][-4][1])
+
+if final_result==True:
+    new_england_dashboard (final_result)
+else:
+    pass
+        
+
+
+        
+    
+    
+    
+    
+    
+    
+    
+    
+    
