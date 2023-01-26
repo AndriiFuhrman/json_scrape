@@ -91,9 +91,9 @@ def new_england_dashboard(result):
     final_demand_gas_today=round((demand_gas_today['current']['data'][-1][1]-demand_gas_today['current']['data'][-2][1]),2)
     def demand_gas_result_today(final_demand_gas_today):
         if final_demand_gas_today>0:
-            print (f"Daily demand NG UP {round(final_demand_gas_today,2)} Bcf, UNG UP {round(((final_demand_gas_today*(18/10))),2)}%")
+            print (f"Daily demand NG UP {round(final_demand_gas_today,2)} Bcf, NG UP {round(((final_demand_gas_today*(18/10))),2)}%")
         if final_demand_gas_today<0:
-            print(f"Daily demand NG DOWN {round(final_demand_gas_today,2)} Bcf, KOLD DOWN {round(((final_demand_gas_today*(18/10))),2)}%")
+            print(f"Daily demand NG DOWN {round(final_demand_gas_today,2)} Bcf, NG DOWN {round(((final_demand_gas_today*(18/10))),2)}%")
     demand_gas_result_today(final_demand_gas_today)
                                      #NEW ENGLAND PETROLEUM DISTILLATE STOCK CHANGE DAILY
     destilate_stocks_today=requests.get('https://www.eia.gov/dashboard/new-england-energy-api/petroleum/weekly-distillate-oil-stocks').json()
@@ -103,9 +103,9 @@ def new_england_dashboard(result):
         final_destilate_stocks =round((destilate_stocks_today['current']['data'][0][1]))
     def destilate_stocks_today_func(final_destilate_stocks_today):
         if final_destilate_stocks_today<0:
-            print(f"Distillate stock DOWN {round(final_destilate_stocks_today,2)} mill barrels, UCO UP {round((((final_destilate_stocks_today*100)/(333/1000))/-220),2)}%")
+            print(f"Distillate stock DOWN {round(final_destilate_stocks_today,2)} mill barrels, Distillate UP {round((((final_destilate_stocks_today*100)/(333/1000))/-220),2)}%")
         if final_destilate_stocks_today>0:
-            print(f"Distillate stock UP {round(final_destilate_stocks_today,2)} mill barrels, UCO DOWN {round((((final_destilate_stocks_today*100)/(333/1000))/-220),2)}%")
+            print(f"Distillate stock UP {round(final_destilate_stocks_today,2)} mill barrels, Distillate DOWN {round((((final_destilate_stocks_today*100)/(333/1000))/-220),2)}%")
     destilate_stocks_today_func(final_destilate_stocks)
                                          #NEW ENGLAND HEATING OIL PRICE CHANGE DAILY
 
@@ -121,9 +121,9 @@ def new_england_dashboard(result):
         def heating_price_result(result_heating_oil):
             try:
                 if result_heating_oil>0:
-                    print(f"Heating oil UP {round((result_heating_oil),2)}%, UCO DOWN {round((result_heating_oil),2)}%")
+                    print(f"Heating oil UP {round((result_heating_oil),2)}%, Heating oil DOWN {round((result_heating_oil),2)}%")
                 if result_heating_oil<0:
-                    print(f"Heating oil DOWN {round((result_heating_oil),2)}%, UCO UP {round((result_heating_oil -(-3/10)),2)}%")
+                    print(f"Heating oil DOWN {round((result_heating_oil),2)}%, Heating oil UP {round((result_heating_oil -(-3/10)),2)}%")
             except IndexError:
                 print(f"List index out of range, NEED CHECK")
                 pass
